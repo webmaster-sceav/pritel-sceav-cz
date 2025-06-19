@@ -49,6 +49,7 @@
                         </heading>
                         <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
                             <div class="bg-red-800 aspect-[4/3]">
+                                <a href={ '/r/' + tile.slug }>
                                     <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
                                         <span class="text-gray-500">Načítám...</span>
                                     </div>
@@ -59,7 +60,7 @@
                                         alt="" 
                                         class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
                                     />
-                                
+                                </a>
                             </div>
                         </div>
                 `;

@@ -1,5 +1,4 @@
 ---
-export const prerender = false;
 
 import "../../../global.css";
 import Header from '../../components/ui/Header.astro';
@@ -8,13 +7,13 @@ import Footer from "../../components/ui/Footer.astro";
 
 import { Image } from "astro:assets";
 import { contentfulClient } from "../../lib/contentful";
-import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+//import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import { changeWhitespacetoNbsp } from '../../lib/textPreprocessor';
+
 import type {
     Asset,
     AssetDetails,
-    EntryFieldsSetFilter,
     EntryFieldTypes,
-    OrderFilterPaths,
 } from "contentful";
 
 interface PritelPosts {
@@ -23,7 +22,7 @@ interface PritelPosts {
         title: EntryFieldTypes.Text;
         slug: EntryFieldTypes.Text;
         publishedAt: EntryFieldTypes.Date;
-        summary: EntryFieldTypes.RichText;
+        summary: EntryFieldTypes.Text; //EntryFieldTypes.RichText;
         tableOfContents: EntryFieldTypes.Object<[{ title: string, page: number, author: string, }]>;
         pdfFile: EntryFieldTypes.AssetLink;
         thumbnail: EntryFieldTypes.AssetLink;
@@ -46,7 +45,7 @@ try {
 
     post = {
         title: title,
-        summary: summary,
+        summary: changeWhitespacetoNbsp( summary ),
         monthName: formatter.format(new Date(publishedAt)) ?? "",
         year: publishedAt.split("-")[0] ?? "",
         toc: tableOfContents,
@@ -59,7 +58,6 @@ try {
             (thumbnailAsset?.fields?.file?.details as AssetDetails)?.image
                 ?.height ?? 0,
     };
-    console.log(summary);
 } catch (error) {
     return Astro.redirect("/404");
 }
@@ -105,8 +103,7 @@ try {
                 </leftCol>
 
                 <rightCol class="flex flex-col justify-start gap-8 max-w-[600px]">
-
-                    <div set:html={ documentToHtmlString( post?.summary ) } class="" />
+                    <div class="hyphens-auto text-pretty"> { post?.summary }</div>
                     
                     <Image
                         src={ post.thumbnaillUrl }
