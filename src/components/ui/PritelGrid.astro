@@ -43,8 +43,12 @@ const posts = await res.json();
                                 width={ tile.thumbnailWidth} 
                                 height={ tile.thumbnailHeight } 
                                 alt="" 
+                                onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
                                 class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
                             />
+                            <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
+                                <span class="text-gray-500">Načítám...</span>
+                            </div>                           
                             :
                             "Thumbnail"
                         }
@@ -60,6 +64,7 @@ const posts = await res.json();
                     </heading>
                     <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
                         <div class="relative w-full aspect-[4/3]">
+                            <a href={ '/r/' + tile.slug }>
                             {
                                 tile.thumbnailUrl 
                                 ?
@@ -77,7 +82,7 @@ const posts = await res.json();
                                 :
                                 "Thumbnail"
                             }
-                            
+                            </a>
                         </div>
                     </div>
                 </tile>               
