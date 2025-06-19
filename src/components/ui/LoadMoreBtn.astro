@@ -1,0 +1,118 @@
+---
+
+---
+
+<tile id="MoreBtn" class="bg-stone-200 cursor-pointer">
+    <heading class="mb-2 flex h-8 justify-between">
+        <div class="px-2 py-1.5"></div>
+        <div class="rounded-bl-md px-2 py-1.5 text-white"></div>
+    </heading>
+    <div class="flex h-[calc(100%-3rem)] items-center justify-center px-2">
+        <div class="flex justify-center">
+            <div class="w-fit self-center rounded-lg border px-2 py-1.5">
+                Načíst další...
+            </div>
+        </div>
+    </div>
+</tile>
+
+
+
+<script>
+
+    const moreBtn = document.getElementById("MoreBtn");
+    let skip = 7;
+    const limit = 8;
+    
+    moreBtn?.addEventListener("click", async (event) => {
+        
+        function noMoreNews(){
+            if ( pritelGrid && moreBtn ) {
+                pritelGrid.innerHTML += ` <p>Žádné další aktuality</p> `;
+                moreBtn.classList.add("hidden");
+            }
+        }
+
+        function showNews(){
+
+            if ( ! pritelGrid ) return;
+
+            news.map(( tile, index) => {
+                const newTile = document.createElement( "tile" );
+                newTile.setAttribute( 'key', index.toString() );
+                newTile.classList.add('bg-stone-200', 'pb-4');
+                newTile.innerHTML = 
+                    `
+                        <heading class="mb-4 flex justify-between">
+                            <div class="px-4 py-2 font-semibold capitalize"> ${ tile.monthName } </div>
+                            <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> ${ tile.year } </div>
+                        </heading>
+                        <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
+                            <div class="bg-red-800 aspect-[4/3]">
+                                    <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
+                                        <span class="text-gray-500">Načítám...</span>
+                                    </div>
+                                    <img 
+                                        src=${ tile.thumbnailUrl } 
+                                        width=${ tile.thumbnailWidth} 
+                                        height=${ tile.thumbnailHeight } 
+                                        alt="" 
+                                        class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
+                                    />
+                                
+                            </div>
+                        </div>
+                `;
+
+                const img = newTile.querySelector("img");
+                const spinner = newTile.querySelector(".spinner");
+
+                (img && spinner ) && img.addEventListener("load", () => {
+                    newTile.classList.remove("spinner");
+                    img.classList.remove("opacity-0");
+                    spinner.remove(); // remove the spinner once loaded
+                });
+                pritelGrid.insertBefore ( newTile, moreBtn );
+            })
+        }
+
+        // news-list is loaded as server:defer so this component might not be available on load, delaying query until click event
+        const pritelGrid = document.getElementById("pritelGrid");
+        
+        if ( !pritelGrid ) return;
+
+        event.preventDefault();
+        
+
+        const response = await fetch (
+            '/api/getEntries?' + new URLSearchParams(
+                {
+                    skip: skip.toString(),
+                })
+                .toString()
+        );
+
+        if ( response.status === 200 ){
+            var news: Array<{ 
+                        monthName: string; 
+                        year: string; 
+                        slug: string; 
+                        thumbnailUrl: string; 
+                        thumbnailWidth: number; 
+                        thumbnailHeight: number; 
+                        }> = await response.json();
+            //console.log(news)
+
+            news?.length ? showNews() : noMoreNews();
+            skip += limit;
+
+        } else {
+
+            pritelGrid.innerHTML += ` <p>Nepodařilo se načíst aktuality</p> `;
+
+        }
+
+        return false;
+    })
+
+</script>

@@ -1,158 +1,79 @@
 ---
 
 import { Image, } from 'astro:assets';
-import { contentfulClient } from "../../lib/contentful";
-import type { Asset, AssetDetails, EntryFieldsSetFilter, EntryFieldTypes, OrderFilterPaths } from "contentful";
+import { GET } from '../../pages/api/getEntries.ts';
+import LoadMoreBtn from '../ui/LoadMoreBtn.astro';
 
-interface PritelPosts {
-  contentTypeId: "pritel",
-  fields: {
-    title: EntryFieldTypes.Text,
-    slug: EntryFieldTypes.Text,
-    publishedAt: EntryFieldTypes.Date,
-    summary: EntryFieldTypes.RichText,
-    tableOfContents: EntryFieldTypes.Object,
-    pdfFile: EntryFieldTypes.AssetLink,
-    thumbnail: EntryFieldTypes.AssetLink,
+const res = await GET( Astro );
+const posts = await res.json();
 
-  }
-}
-
-const entries = await contentfulClient.getEntries<PritelPosts>({
-  content_type: "pritel",
-});
-
-const posts = entries.items.map( ( item ) => {
-
-    const { title, slug, publishedAt, summary, tableOfContents, pdfFile, thumbnail } = item.fields;
-    const formatter = new Intl.DateTimeFormat('cs', { month: 'long' });
-    const monthName = formatter.format(new Date( publishedAt ));
-    const year = publishedAt.split("-")[0];
-    const link = (pdfFile as Asset)?.fields?.file?.url as string;
-    const thumbnailAsset = (thumbnail as Asset);
-    const thumbnaillUrl = thumbnailAsset.fields.file?.url as string;
-    const thumbnailWidth = (thumbnailAsset?.fields?.file?.details as AssetDetails)?.image?.width ?? 0;
-    const thumbnailHeight = (thumbnailAsset?.fields?.file?.details as AssetDetails)?.image?.height ?? 0;
-
-    return {
-        title,
-        slug,
-        monthName,
-        year,
-        link,
-        thumbnailWidth,
-        thumbnailHeight,
-        thumbnaillUrl,
-    }; 
-})
-
-const thumbDir = '../../assets/thumbnails/';
-
-const thumbnailGrid: { 
-    month: string; 
-    year: string; 
-    img: string; 
-    link: string; 
-    imgData?: () => Promise<{default: ImageMetadata}>,
-}[] = [
-    {
-        month: "Červenec",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_01.pdf.png",
-        link: "/r/pritel-1-2025",
-    },
-    {
-        month: "Červen",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_06.pdf.png",
-        link: "",
-    },
-    {
-        month: "Květen",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_05.pdf.png",
-        link: "",
-    },
-    {
-        month: "Duben",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_04.pdf.png",
-        link: "",
-    },
-    {
-        month: "Březen",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_03.pdf.png",
-        link: "",
-    },
-    {
-        month: "Únor",
-        year: "2025",
-        img: thumbDir + "Pritel_2025_02.pdf.png",
-        link: "",
-    },
-];
-
-
-const images = import.meta.glob<{ default: ImageMetadata }>( '../../assets/thumbnails/' + '*.png' );
-
-thumbnailGrid.map( 
-    ( item ) => {
-        return item.imgData = images[item.img] ?? null;
-    }
-)
-
-//console.log(thumbnailGrid)
 
 ---
-		<div class="grid lg:grid-cols-4 grid-cols-1 gap-2 lg:px-20 px-8 ">
-            {
-                posts.map( ( tile, index ) => (
-                ( index === 0 ) 
-                ?
-                <tile class="bg-amber-500 pb-4">
-                    <heading class="mb-4 flex justify-between">
-                        <div class="px-4 py-2 font-semibold"> { tile.monthName } </div>
-                        <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
-                    </heading>
-                    <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                        <div class="bg-red-800">
-                            <a href={ '/r/' + tile.slug }>
-                            {
-                                tile.thumbnaillUrl 
-                                ?
-                                <Image 
-                                    src={ tile.thumbnaillUrl } 
-                                    width={ tile.thumbnailWidth} 
-                                    height={ tile.thumbnailHeight } 
-                                    alt="" 
-                                    class="object-scale-down w-max" 
-                                />
-                                :
-                                "Thumbnail"
-                            }
-                            </a>
-                        </div>
+
+   
+
+    <div id="pritelGrid" class="grid lg:grid-cols-4 grid-cols-1 gap-2 lg:px-20 px-8 ">
+        {
+            posts.map( 
+                ( tile: { 
+                    monthName: string; 
+                    year: string; 
+                    slug: string; 
+                    thumbnailUrl: string; 
+                    thumbnailWidth: number; 
+                    thumbnailHeight: number; 
+                    }, 
+                    index: number 
+                ) => (
+            ( index === 0 ) 
+            ?
+            <tile class="bg-amber-500 pb-4">
+                <heading class="mb-4 flex justify-between">
+                    <div class="px-4 py-2 font-semibold capitalize"> { tile.monthName } </div>
+                    <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
+                </heading>
+                <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
+                    <div class="relative w-full aspect-[4/3]">
+                        <a href={ '/r/' + tile.slug }>
+                        {
+                            tile.thumbnailUrl 
+                            ?
+                            <Image 
+                                src={ tile.thumbnailUrl } 
+                                width={ tile.thumbnailWidth} 
+                                height={ tile.thumbnailHeight } 
+                                alt="" 
+                                class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
+                            />
+                            :
+                            "Thumbnail"
+                        }
+                        </a>
                     </div>
-                </tile>
-                :
-                 <tile class="bg-stone-200 pb-4">
+                </div>
+            </tile>
+            :
+                <tile class="bg-stone-200 pb-4">
                     <heading class="mb-4 flex justify-between">
-                        <div class="px-4 py-2 font-semibold"> { tile.monthName } </div>
+                        <div class="px-4 py-2 font-semibold capitalize"> { tile.monthName } </div>
                         <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
                     </heading>
                     <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                        <div class="bg-red-800">
+                        <div class="relative w-full aspect-[4/3]">
                             {
-                                tile.thumbnaillUrl 
+                                tile.thumbnailUrl 
                                 ?
                                 <Image 
-                                    src={ tile.thumbnaillUrl } 
+                                    src={ tile.thumbnailUrl } 
                                     width={ tile.thumbnailWidth} 
                                     height={ tile.thumbnailHeight } 
                                     alt="" 
-                                    class="object-scale-down w-max" 
+                                    onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
+                                    class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
                                 />
+                                <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
+                                    <span class="text-gray-500">Načítám...</span>
+                                </div>
                                 :
                                 "Thumbnail"
                             }
@@ -160,83 +81,10 @@ thumbnailGrid.map(
                         </div>
                     </div>
                 </tile>               
-                ))
-            }
+            ))
+            
+        }
 
-			<tile class="bg-stone-200">
-				<heading class="mb-2 flex h-8 justify-between">
-                    <div class="px-2 py-1.5"></div>
-                    <div class="rounded-bl-md px-2 py-1.5 text-white"></div>
-				</heading>
-				<div class="flex h-[calc(100%-3rem)] items-center justify-center px-2">
-					<div class="flex justify-center">
-						<div class="w-fit self-center rounded-lg border px-2 py-1.5">
-							Načíst další...
-						</div>
-					</div>
-				</div>
-			</tile>
+         <LoadMoreBtn />
 
-		</div>
-
-		<div class="grid lg:grid-cols-4 grid-cols-1 gap-2 lg:px-20 px-8 ">
-            {
-                thumbnailGrid.map( ( tile, index ) => (
-                ( index === 0 ) 
-                ?
-                <tile class="bg-amber-500 pb-4">
-                    <heading class="mb-4 flex justify-between">
-                        <div class="px-4 py-2 font-semibold"> { tile.month } </div>
-                        <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
-                    </heading>
-                    <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                        <div class="bg-red-800">
-                            <a href={ tile?.link }>
-                            {
-                                tile.imgData 
-                                ?
-                                <Image src={ tile.imgData() } alt="" class="object-scale-down w-max" />
-                                :
-                                "Thumbnail"
-                            }
-                            </a>
-                        </div>
-                    </div>
-                </tile>
-                :
-                 <tile class="bg-stone-200 pb-4">
-                    <heading class="mb-4 flex justify-between">
-                        <div class="px-4 py-2 font-semibold"> { tile.month } </div>
-                        <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
-                    </heading>
-                    <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                        <div class="bg-red-800">
-                            {
-                                tile.imgData 
-                                ?
-                                <Image src={ tile.imgData() } alt="" class="object-scale-down w-max" />
-                                :
-                                "Thumbnail"
-                            }
-                            
-                        </div>
-                    </div>
-                </tile>               
-                ))
-            }
-
-			<tile class="bg-stone-200">
-				<heading class="mb-2 flex h-8 justify-between">
-                    <div class="px-2 py-1.5"></div>
-                    <div class="rounded-bl-md px-2 py-1.5 text-white"></div>
-				</heading>
-				<div class="flex h-[calc(100%-3rem)] items-center justify-center px-2">
-					<div class="flex justify-center">
-						<div class="w-fit self-center rounded-lg border px-2 py-1.5">
-							Načíst další...
-						</div>
-					</div>
-				</div>
-			</tile>
-
-		</div>
+    </div>
