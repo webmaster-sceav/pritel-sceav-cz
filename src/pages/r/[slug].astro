@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+
+import "../../../global.css";
+import Header from '../../components/ui/Header.astro';
+import Spacer from '../../components/ui/Spacer.astro'; 
+import Footer from "../../components/ui/Footer.astro";
+
+import { Image } from "astro:assets";
+import { contentfulClient } from "../../lib/contentful";
+import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import type {
+    Asset,
+    AssetDetails,
+    EntryFieldsSetFilter,
+    EntryFieldTypes,
+    OrderFilterPaths,
+} from "contentful";
+
+interface PritelPosts {
+    contentTypeId: "pritel";
+    fields: {
+        title: EntryFieldTypes.Text;
+        slug: EntryFieldTypes.Text;
+        publishedAt: EntryFieldTypes.Date;
+        summary: EntryFieldTypes.RichText;
+        tableOfContents: EntryFieldTypes.Object<[{ title: string, page: number, author: string, }]>;
+        pdfFile: EntryFieldTypes.AssetLink;
+        thumbnail: EntryFieldTypes.AssetLink;
+    };
+}
+
+const { slug } = Astro.params;
+
+let post;
+
+try {
+    const entries = await contentfulClient.getEntries<PritelPosts>({
+        content_type: "pritel",
+        "fields.slug": slug,
+    });
+    const { title, publishedAt, summary, tableOfContents, pdfFile, thumbnail } =
+        entries.items[0].fields;
+    const formatter = new Intl.DateTimeFormat("cs", { month: "long" });
+    const thumbnailAsset = thumbnail as Asset;
+
+    post = {
+        title: title,
+        summary: summary,
+        monthName: formatter.format(new Date(publishedAt)) ?? "",
+        year: publishedAt.split("-")[0] ?? "",
+        toc: tableOfContents,
+        link: (pdfFile as Asset)?.fields?.file?.url as string,
+        thumbnaillUrl: thumbnailAsset.fields.file?.url as string,
+        thumbnailWidth:
+            (thumbnailAsset?.fields?.file?.details as AssetDetails)?.image
+                ?.width ?? 0,
+        thumbnailHeight:
+            (thumbnailAsset?.fields?.file?.details as AssetDetails)?.image
+                ?.height ?? 0,
+    };
+    console.log(summary);
+} catch (error) {
+    return Astro.redirect("/404");
+}
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Přítel - SCEAV.CZ</title>
+	</head>
+
+	<body class="max-w-[1600px] mx-auto pt-12">
+        
+        <Header />
+
+        <Spacer height="h-24"></Spacer>
+        
+        <div class="">
+            <div class="lg:px-20 px-8 grid grid-cols-1 lg:grid-cols-2 mx-auto gap-8">
+                <leftCol class="flex flex-col gap-8">
+                    <div class="bg-stone-800 text-white px-8 py-8 w-full max-w-[600px] flex justify-between">
+                        <p class="text-3xl capitalize">{ post.monthName }</p>
+                        <p class="text-3xl">{ post.year }</p>
+                    </div>
+
+                    <div class="bg-stone-800 text-white px-8 py-8 w-full max-w-[600px]">
+                        {
+                            Array.isArray(post.toc) && 
+                            post.toc.map((item ) => (
+                            
+                                <p class="text-xl">{ item?.title }</p>
+                            
+                            ))
+                        }
+                    </div>
+
+                    <div class="bg-stone-800 text-white px-8 py-8 w-full max-w-[600px]">
+                        <a class="underline text-3xl" href={ post.link }>Stáhnout PDF</a>
+                    </div>
+                </leftCol>
+
+                <rightCol class="flex flex-col justify-start gap-8 max-w-[600px]">
+
+                    <div set:html={ documentToHtmlString( post?.summary ) } class="" />
+                    
+                    <Image
+                        src={ post.thumbnaillUrl }
+                        alt=""
+                        width={ post.thumbnailWidth }
+                        height={ post.thumbnailHeight }
+                        class="object-scale-down w-max" 
+                    />
+                                
+                </rightCol>
+
+
+            </div>
+        </div>
+        
+        <Spacer height="h-24" />
+
+        <Footer />
+
+    </body>
+</html>
