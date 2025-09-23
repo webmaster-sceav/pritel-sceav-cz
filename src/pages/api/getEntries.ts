@@ -23,7 +23,6 @@ interface PritelPosts {
 export const GET: APIRoute = async ( { request } ) => {
 
     const url = new URL(request.url);
-    console.log( url )
     const skip = parseInt(url.searchParams.get('skip') || '0');
 
     const limit = ( skip > 0 ) ? 8 : 7;
