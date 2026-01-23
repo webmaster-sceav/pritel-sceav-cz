@@ -1,0 +1,49 @@
+---
+import Header from '../components/ui/Header.astro';
+import Footer from '../components/ui/Footer.astro';
+import Flare from '../components/ui/Flare.astro';
+import ThemeSwitcher from '../components/ui/ThemeSwitcher.astro';
+
+import '../styles/global.css';
+
+const { title, isMainPage = true } = Astro.props;
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=3600'); // 1 hour on client
+Astro.response.headers.set('CDN-Cache-Control', 'max-age=3600'); // 1 hour on downstream CDNs 
+Astro.response.headers.set('Vercel-CDN-Cache-Control', 'max-age=3600'); // 1 hour on Vercel Edge
+
+---
+
+<html lang="cs">
+	<head>
+		<meta charset="utf-8" />    
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Oficiální stránky časopisu Přítel ze Slezské církve evangelické a. v. Nové číslo každ měsíc." />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link
+            rel="preload"
+            href="/fonts/Montserrat-roman-subset.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        >     
+        <meta name="apple-mobile-web-app-title" content="SCEAV.CZ" />
+        <link rel="manifest" href="/site.webmanifest" />
+		<title>Přítel SCEAV.CZ {title}</title>
+	</head>
+	<body id="mainBody" class="font-sans bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-200">
+        <div class="absolute top-4 right-4 z-20">
+             <ThemeSwitcher />
+        </div>
+       
+        <Header isMainPage={isMainPage}/>
+        <Flare />
+        <div class="mx-auto relative overflow-hidden">
+            <slot /> <!-- page content -->
+            <Footer />
+        </div>
+	</body>
+</html>

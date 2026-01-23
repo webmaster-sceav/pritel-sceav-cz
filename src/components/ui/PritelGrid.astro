@@ -10,9 +10,7 @@ const posts = await res.json();
 
 ---
 
-   
-
-    <div id="pritelGrid" class="grid lg:grid-cols-4 grid-cols-1 gap-2 lg:px-20 px-8 ">
+    <div id="pritelGrid" class="grid grid-flow-row grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {
             posts.map( 
                 ( tile: { 
@@ -26,66 +24,74 @@ const posts = await res.json();
                     index: number 
                 ) => (
             ( index === 0 ) 
+
             ?
-            <tile class="bg-amber-500 pb-4">
-                <heading class="mb-4 flex justify-between">
-                    <div class="px-4 py-2 font-semibold capitalize"> { tile.monthName } </div>
-                    <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
-                </heading>
-                <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                    <div class="relative w-full aspect-[4/3]">
-                        <a href={ '/r/' + tile.slug }>
-                        {
-                            tile.thumbnailUrl 
-                            ?
-                            <Image 
-                                src={ tile.thumbnailUrl } 
-                                width={ tile.thumbnailWidth} 
-                                height={ tile.thumbnailHeight } 
-                                alt="" 
-                                onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
-                                class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
-                            />
-                            <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
-                                <span class="text-gray-500">Načítám...</span>
-                            </div>                           
-                            :
-                            "Thumbnail"
-                        }
-                        </a>
-                    </div>
-                </div>
-            </tile>
-            :
-                <tile class="bg-stone-200 pb-4">
-                    <heading class="mb-4 flex justify-between">
-                        <div class="px-4 py-2 font-semibold capitalize"> { tile.monthName } </div>
-                        <div class="rounded-bl-md bg-stone-800 px-4 py-2 text-white"> { tile.year } </div>
-                    </heading>
-                    <div class="flex h-[calc(100%-3rem)] items-center justify-center px-4">
-                        <div class="relative w-full aspect-[4/3]">
-                            <a href={ '/r/' + tile.slug }>
-                            {
-                                tile.thumbnailUrl 
-                                ?
-                                <Image 
-                                    src={ tile.thumbnailUrl } 
-                                    width={ tile.thumbnailWidth} 
-                                    height={ tile.thumbnailHeight } 
-                                    alt="" 
-                                    onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
-                                    class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
-                                />
-                                <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
-                                    <span class="text-gray-500">Načítám...</span>
+                        
+            <div class="col-span-1 group relative">
+                <a href={ '/r/' + tile.slug } class="block ">
+                    <div class="h-full bg-linear-to-br from-sceav-blue to-blue-600 rounded-3xl p-1 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+                        <div class="bg-white dark:bg-slate-800 rounded-[1.3rem] h-full overflow-hidden flex flex-col">
+                            <div class="p-6 pb-2 flex justify-between items-center">
+                                <span class="font-bold text-2xl text-sceav-blue">{ tile.monthName }</span>
+                                <span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-sm font-bold">{ tile.year }</span>
+                            </div>
+                            <div class="flex-grow flex items-center justify-center p-4">
+                                <div class="relative w-full aspect-[210/297] shadow-md rounded-lg overflow-hidden">
+                                {
+                                    tile.thumbnailUrl 
+                                    ?
+                                    <Image 
+                                        src={ tile.thumbnailUrl } 
+                                        width={ tile.thumbnailWidth} 
+                                        height={ tile.thumbnailHeight } 
+                                        alt="" 
+                                        onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
+                                        class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
+                                    />
+                                    <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
+                                        <span class="text-gray-500">Načítám...</span>
+                                    </div>                           
+                                    :
+                                    "Thumbnail"
+                                }
                                 </div>
-                                :
-                                "Thumbnail"
-                            }
-                            </a>
+                            </div>
+                            <div class="p-4 text-center">
+                                <span class="inline-block text-sm font-bold text-slate-400 uppercase tracking-wider group-hover:text-sceav-blue transition-colors">Nejnovější číslo</span>
+                            </div>
                         </div>
                     </div>
-                </tile>               
+                </a>
+            </div>
+
+            :
+
+            <div class="group bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <a href={ '/r/' + tile.slug } class="block p-4">
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <span class="font-bold text-lg capitalize">{ tile.monthName }</span>
+                        <span class="text-slate-400 text-sm font-mono">{ tile.year }</span>
+                    </div>
+                    <div class="relative w-full aspect-[210/297] bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden shadow-inner">
+                        {tile.thumbnailUrl 
+                        ?
+                        <Image 
+                            src={ tile.thumbnailUrl } 
+                            width={ tile.thumbnailWidth} 
+                            height={ tile.thumbnailHeight } 
+                            alt="" 
+                            onload="this.classList.remove('opacity-0'); this.nextElementSibling?.remove()"
+                            class="object-scale-down w-max opacity-0 transition-opacity duration-300" 
+                        />
+                        <div class="spinner absolute inset-0 flex items-center justify-center animate-pulse bg-stone-200 z-10">
+                            <span class="text-gray-500">Načítám...</span>
+                        </div>
+                        :
+                        "Thumbnail"
+                        }
+                    </div>
+                </a>
+            </div>              
             ))
             
         }

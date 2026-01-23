@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Montserrat Roman 200-900 */
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("/fonts/Montserrat-roman-subset.woff2") format("woff2");
+  unicode-range: 
+  U+0020-007E, /* Basic Latin */
+  U+00A0,      /* Non-breaking space */
+  U+00C1, U+00E1, U+00C4, U+00E4, U+00C9, U+00E9, U+00CD, U+00ED, 
+  U+00D3, U+00F3, U+00D4, U+00F4, U+00DA, U+00FA, U+00DD, U+00FD, 
+  U+0104-0107, /* Ą ą Ć ć */
+  U+010C-010F, /* Č č Ď ď */
+  U+0118-011B, /* Ę ę Ě ě (Fixed to include 11A) */
+  U+0139-013A, /* Ĺ ĺ */
+  U+013D-013E, /* Ľ ľ */
+  U+0141-0144, /* Ł ł Ń ń */
+  U+0147-0148, /* Ň ň */
+  U+0154-0155, /* Ŕ ŕ */
+  U+0158-015B, /* Ř ř Ś ś (Fixed to include 15A/15B) */
+  U+0160-0161, /* Š š */
+  U+0164-0165, /* Ť ť */
+  U+016E-016F, /* Ů ů */
+  U+0179-017E, /* Ź ź Ż ż Ž ž */
+  U+2013-2014, /* En dash, Em dash */
+  U+201C-201E; /* Quotes “ ” „ */
+}
+
+/* Montserrat Italic 400 */
+@font-face {
+  font-family: "Montserrat";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Montserrat-italic-400-subset.woff2") format("woff2");
+  unicode-range: 
+  U+0020-007E, /* Basic Latin */
+  U+00A0,      /* Non-breaking space */
+  U+00C1, U+00E1, U+00C4, U+00E4, U+00C9, U+00E9, U+00CD, U+00ED, 
+  U+00D3, U+00F3, U+00D4, U+00F4, U+00DA, U+00FA, U+00DD, U+00FD, 
+  U+0104-0107, /* Ą ą Ć ć */
+  U+010C-010F, /* Č č Ď ď */
+  U+0118-011B, /* Ę ę Ě ě (Fixed to include 11A) */
+  U+0139-013A, /* Ĺ ĺ */
+  U+013D-013E, /* Ľ ľ */
+  U+0141-0144, /* Ł ł Ń ń */
+  U+0147-0148, /* Ň ň */
+  U+0154-0155, /* Ŕ ŕ */
+  U+0158-015B, /* Ř ř Ś ś (Fixed to include 15A/15B) */
+  U+0160-0161, /* Š š */
+  U+0164-0165, /* Ť ť */
+  U+016E-016F, /* Ů ů */
+  U+0179-017E, /* Ź ź Ż ż Ž ž */
+  U+2013-2014, /* En dash, Em dash */
+  U+201C-201E; /* Quotes “ ” „ */
+}
+
+
+@theme {
+    --font-sans: "Montserrat", system-ui, sans-serif;
+    --color-sceav-darkblue: #0062D6;
+    --color-sceav-blue: #a5d7f3;
+    --color-sceav-gold: #fbbf24;
+    --animate-fade-in-scale: fade-in-scale 550ms ease-out both;
+    --animate-toast-in-out: slide-in 300ms forwards, fade-out 300ms 3000ms forwards;
+
+    @keyframes fade-in-scale {
+        0%   { opacity: 0; transform: scale(.95) }
+        100% { opacity: 1; transform: scale(1) }
+    }
+    @keyframes slide-in {
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-out {
+        to { opacity: 0; transform: translateY(-20px); }
+    }
+  
+}
