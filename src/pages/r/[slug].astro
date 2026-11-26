@@ -5,6 +5,7 @@ import "../../styles/global.css";
 import BaseLayout from "../../layout/Base.astro";
 import { Image } from "astro:assets";
 import { contentfulClient } from "../../lib/contentful";
+import { downloadQuery, isActiveReaderCode, issuePaywall, normalizeReaderCode, readerCodeCookie } from "../../lib/paywall";
 //import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
 import { changeWhitespacetoNbsp } from '../../lib/textPreprocessor';
 
@@ -43,6 +44,7 @@ try {
 
     post = {
         title: title,
+        publishedAt,
         summary: changeWhitespacetoNbsp( summary ),
         monthName: formatter.format(new Date(publishedAt)) ?? "",
         year: publishedAt.split("-")[0] ?? "",
@@ -63,10 +65,62 @@ try {
 }
 
 const issuedYears = new Date().getFullYear() - 1947;
+const paywall = issuePaywall(post.publishedAt);
+const issuePath = Astro.url.pathname;
+const checksDownload = Astro.url.searchParams.get(downloadQuery) === '1';
+const isCodeSubmission = Astro.request.method === 'POST';
+const privateResponse = Boolean(paywall) || checksDownload || isCodeSubmission;
+const downloadHref = paywall ? `${issuePath}?${downloadQuery}=1` : post.link;
+let canDownload = !paywall;
+let codeError = '';
+
+function redirectWithoutCache(location: string) {
+    return new Response(null, {
+        status: 303,
+        headers: { Location: location, 'Cache-Control': 'private, no-store' },
+    });
+}
+
+if (paywall) {
+    const code = normalizeReaderCode(isCodeSubmission
+        ? (await Astro.request.formData()).get('code')
+        : Astro.cookies.get(readerCodeCookie)?.value);
+
+    try {
+        canDownload = await isActiveReaderCode(code);
+    } catch {
+        Astro.response.status = 503;
+        codeError = 'Kód se nepodařilo ověřit. Zkuste to prosím později.';
+    }
+
+    if (isCodeSubmission && !codeError) {
+        if (canDownload && code) {
+            Astro.cookies.set(readerCodeCookie, code, {
+                path: '/r',
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: Astro.url.protocol === 'https:',
+                maxAge: 366 * 24 * 60 * 60,
+            });
+            return redirectWithoutCache(issuePath);
+        }
+
+        Astro.response.status = 403;
+        codeError = 'Tento kód není platný pro aktuální rok.';
+    }
+} else if (isCodeSubmission) {
+    return redirectWithoutCache(issuePath);
+}
+
+if (checksDownload && !isCodeSubmission && !codeError) {
+    if (!canDownload) return redirectWithoutCache(issuePath);
+    if (!post.link) return new Response(null, { status: 404 });
+    return redirectWithoutCache(new URL(post.link, Astro.url).href);
+}
 
 ---
 
-<BaseLayout isMainPage={false}>
+<BaseLayout isMainPage={false} privateResponse={privateResponse}>
     <main class="max-w-7xl mx-auto px-8 lg:px-20 mb-32">
 
         <a
@@ -96,15 +150,31 @@ const issuedYears = new Date().getFullYear() - 1947;
                 </div>
 
                 <div class="mt-8 flex flex-col gap-4 max-w-[500px] mx-auto lg:max-w-none">
-                    <a href={ post.link }
+                    {canDownload && downloadHref ? <a href={ downloadHref }
                        target="_blank"
                        class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-red-600 hover:bg-red-700 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         Stáhnout PDF
-                    </a>
-                    <p class="text-center text-sm text-slate-400">Formát PDF • Velikost cca 5 MB</p>
+                    </a> : paywall ? <form method="post" action={issuePath} class="flex flex-col gap-3">
+                        <label for="reader-code" class="flex items-center gap-2 font-bold">
+                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+                            </svg>
+                            Předplatitelský kód
+                        </label>
+                        <input id="reader-code" name="code" type="text" required maxlength="40"
+                            autocapitalize="characters" autocomplete="off" spellcheck="false"
+                            aria-describedby={codeError ? 'reader-code-date reader-code-error' : 'reader-code-date'}
+                            class="rounded-xl border border-slate-400 bg-white px-4 py-3 dark:border-slate-500 dark:bg-slate-800" />
+                        {codeError && <p id="reader-code-error" role="alert" class="text-red-700 dark:text-red-300">{codeError}</p>}
+                        <button type="submit" class="w-full rounded-xl bg-red-600 px-6 py-4 text-lg font-bold text-white shadow-lg hover:bg-red-700">
+                            Odemknout PDF
+                        </button>
+                        <p id="reader-code-date" class="text-center text-sm text-slate-600 dark:text-slate-300">Volně dostupné od {paywall.opensOn}.</p>
+                    </form> : <p class="text-center text-sm">PDF zatím není k dispozici.</p>}
+                    {canDownload && downloadHref && <p class="text-center text-sm text-slate-400">Formát PDF • Velikost cca 5 MB</p>}
                 </div>
             </div>
 

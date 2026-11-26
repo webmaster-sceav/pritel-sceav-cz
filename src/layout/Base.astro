@@ -6,11 +6,12 @@ import ThemeSwitcher from '../components/ui/ThemeSwitcher.astro';
 
 import '../styles/global.css';
 
-const { title, isMainPage = true } = Astro.props;
+const { title, isMainPage = true, privateResponse = false } = Astro.props;
 
-Astro.response.headers.set('Cache-Control', 'public, max-age=3600'); // 1 hour on client
-Astro.response.headers.set('CDN-Cache-Control', 'max-age=3600'); // 1 hour on downstream CDNs 
-Astro.response.headers.set('Vercel-CDN-Cache-Control', 'max-age=3600'); // 1 hour on Vercel Edge
+const cacheControl = privateResponse ? 'private, no-store' : 'public, max-age=3600';
+Astro.response.headers.set('Cache-Control', cacheControl);
+Astro.response.headers.set('CDN-Cache-Control', cacheControl);
+Astro.response.headers.set('Vercel-CDN-Cache-Control', cacheControl);
 
 ---
 

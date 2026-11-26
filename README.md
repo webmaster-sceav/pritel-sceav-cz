@@ -1,5 +1,11 @@
 # Astro Starter Kit: Minimal
 
+## Přítel paywall
+
+Set `PAYWALL_START=2027-01-01` in the production Vercel environment. The cutoff applies to the date in the Contentful issue’s `publishedAt` field. Leave it unset to disable the gate, or use an earlier date in a preview environment to test with a recent issue. An eligible issue becomes public at midnight in `Europe/Prague` on the first day of the third month after its issue month. For example, January opens on April 1.
+
+Set `KV_REST_API_URL` and `KV_REST_API_READ_ONLY_TOKEN` to the URL and read-only REST token of the editorial app’s Redis database. Use a separate database for preview codes. Reader codes are valid during their assigned calendar year in Prague, and the website checks the code again on every protected download. Contentful PDF links remain public.
+
 ```sh
 npm create astro@latest -- --template minimal
 ```
